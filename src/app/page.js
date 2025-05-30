@@ -20,19 +20,30 @@ export default function Home() {
     }
     setRayId(generateRayId())
 
-    const script = document.createElement('script')
-    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js'
-    script.async = true
-    script.onload = () => {
-      setTurnstileLoaded(true)
-      window.handleTurnstileSuccess = handleTurnstileSuccess
+    window.handleTurnstileSuccess = handleTurnstileSuccess
+
+    const loadTurnstile = () => {
+      if (document.querySelector('script[src*="turnstile"]')) {
+        return
+      }
+
+      const script = document.createElement('script')
+      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad'
+      script.async = true
+      script.defer = true
+      document.head.appendChild(script)
     }
-    document.head.appendChild(script)
+
+    window.onTurnstileLoad = () => {
+      console.log('Turnstile loaded')
+      setTurnstileLoaded(true)
+    }
+
+    loadTurnstile()
 
     return () => {
-      if (document.head.contains(script)) {
-        document.head.removeChild(script)
-      }
+      delete window.handleTurnstileSuccess
+      delete window.onTurnstileLoad
     }
   }, [])
 
@@ -117,9 +128,10 @@ export default function Home() {
                       turnstileLoaded ? (
                         <div 
                           className="cf-turnstile" 
-                          data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+                          data-sitekey="0x4AAAAAABehpPA74WTKx33D"
                           data-callback="handleTurnstileSuccess"
                           data-theme="light"
+                          data-size="normal"
                         ></div>
                       ) : (
                         <div className="w-72 h-16 bg-white border border-gray-300 rounded flex items-center justify-center">
