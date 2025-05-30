@@ -1,7 +1,5 @@
 const nextConfig = {
-  experimental: {
-    serverComponentsExternalPackages: ['mongoose']
-  }
+  serverExternalPackages: ['mongoose']
 }
 
 module.exports = nextConfig
