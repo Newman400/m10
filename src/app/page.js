@@ -20,31 +20,34 @@ export default function Home() {
     }
     setRayId(generateRayId())
 
-    window.handleTurnstileSuccess = handleTurnstileSuccess
-
     const loadTurnstile = () => {
-      if (document.querySelector('script[src*="turnstile"]')) {
-        return
-      }
-
       const script = document.createElement('script')
-      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad'
+      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js'
       script.async = true
       script.defer = true
+      
+      script.onload = () => {
+        console.log('Turnstile loaded')
+        setTurnstileLoaded(true)
+        window.handleTurnstileSuccess = handleTurnstileSuccess
+      }
+      
+      script.onerror = () => {
+        console.error('Failed to load Turnstile')
+        setTimeout(loadTurnstile, 2000)
+      }
+      
       document.head.appendChild(script)
+
+      return () => {
+        if (document.head.contains(script)) {
+          document.head.removeChild(script)
+        }
+      }
     }
 
-    window.onTurnstileLoad = () => {
-      console.log('Turnstile loaded')
-      setTurnstileLoaded(true)
-    }
-
-    loadTurnstile()
-
-    return () => {
-      delete window.handleTurnstileSuccess
-      delete window.onTurnstileLoad
-    }
+    const cleanup = loadTurnstile()
+    return cleanup
   }, [])
 
   const handleTurnstileSuccess = async (token) => {
@@ -131,7 +134,6 @@ export default function Home() {
                           data-sitekey="0x4AAAAAABehpPA74WTKx33D"
                           data-callback="handleTurnstileSuccess"
                           data-theme="light"
-                          data-size="normal"
                         ></div>
                       ) : (
                         <div className="w-72 h-16 bg-white border border-gray-300 rounded flex items-center justify-center">
